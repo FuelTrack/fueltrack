@@ -8,10 +8,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="FuelTrack">
-<title>FuelTrack 2.0</title>
+<title>FuelTrack 2.1</title>
 <style>
-:root{color-scheme:dark;--bg:#101114;--panel:#191b20;--panel2:#22252c;--text:#f5f6f8;--muted:#a1a6b2;--line:#30343d;--accent:#a3e635;--accentText:#17210b;--red:#fb7185;--blue:#60a5fa;--orange:#fbbf24;--green:#4ade80;--shadow:0 10px 30px #0002}
-:root[data-theme="light"]{color-scheme:light;--bg:#f4f6f8;--panel:#fff;--panel2:#edf0f4;--text:#181b22;--muted:#687080;--line:#dfe3e9;--accent:#65a30d;--accentText:#fff;--red:#e11d48;--blue:#2563eb;--orange:#b45309;--green:#15803d;--shadow:0 8px 25px #18202a0d}
+:root{color-scheme:dark;--bg:#101114;--panel:#191b20;--panel2:#22252c;--text:#f5f6f8;--muted:#a1a6b2;--line:#30343d;--accent:#c084fc;--accentText:#240a3d;--red:#fb7185;--blue:#60a5fa;--orange:#fbbf24;--green:#c084fc;--shadow:0 10px 30px #0002}
+:root[data-theme="light"]{color-scheme:light;--bg:#f4f6f8;--panel:#fff;--panel2:#edf0f4;--text:#181b22;--muted:#687080;--line:#dfe3e9;--accent:#7e22ce;--accentText:#fff;--red:#e11d48;--blue:#2563eb;--orange:#b45309;--green:#7e22ce;--shadow:0 8px 25px #18202a0d}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:15px;line-height:1.45;padding-bottom:calc(92px + env(safe-area-inset-bottom))}
 button,input,select,textarea{font:inherit}
@@ -46,6 +46,9 @@ canvas,svg.chart{display:block;width:100%;height:auto;overflow:visible}
 .chartbox{padding:12px 6px 2px}.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:var(--muted)}.legend span:before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:5px}.legend .bluekey:before{background:var(--blue)}
 .tabs{display:flex;gap:7px;overflow-x:auto;padding-bottom:5px}.tabs button{white-space:nowrap}
 .notice{border-radius:12px;background:var(--panel2);padding:11px 12px;font-size:12px;color:var(--muted);margin:10px 0}
+.water-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
+.water-buttons .btn{padding:11px 5px;white-space:nowrap}
+.water-total{display:flex;align-items:center;justify-content:space-between;gap:10px}
 hr{border:0;border-top:1px solid var(--line);margin:14px 0}
 details{background:var(--panel2);border-radius:12px;padding:12px;margin:10px 0}summary{font-weight:750;cursor:pointer}
 #scanner{width:100%;overflow:hidden;border-radius:12px;margin-top:10px}
@@ -57,7 +60,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:10px}
 <body>
 <header>
  <div class="header-inner">
-  <div><div class="brand">Fuel<span>Track</span></div><div class="version">VERSION 2.0 · YOUR PROGRESS, CLEARER</div></div>
+  <div><div class="brand">Fuel<span>Track</span></div><div class="version">VERSION 2.1 · YOUR PROGRESS, CLEARER</div></div>
   <button class="iconbtn" id="themeQuick" aria-label="Toggle theme" title="Toggle dark/light mode">☼</button>
  </div>
 </header>
@@ -76,10 +79,10 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:10px}
 "use strict";
 const KEY="fueltrack-v1";
 const defaults={targets:{calories:1800,protein:150,goalWeight:null,startWeight:null},foods:[],weights:[],activity:{}};
-let data, page="today", searchResults=[], scanner=null, editingId=null, selectedMeal="Breakfast", weeklyOffset=0;
+let data,page="today",searchResults=[],scanner=null,editingId=null,selectedMeal="Breakfast",weeklyOffset=0;
 const $=id=>document.getElementById(id);
-const today=()=>new Date().toLocaleDateString("en-CA");
-const dateShift=(date,days)=>{let d=new Date(date+"T12:00:00");d.setDate(d.getDate()+days);return d.toLocaleDateString("en-CA")};
+const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`};
+const dateShift=(date,days)=>{let d=new Date(date+"T12:00:00");d.setDate(d.getDate()+days);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`};
 const dateObj=s=>new Date(s+"T12:00:00");
 const num=(v,f=0)=>Number.isFinite(Number(v))?Number(v):f;
 const round=(v,n=0)=>Number(num(v).toFixed(n));
@@ -116,7 +119,6 @@ function latestWeight(){return allWeightSorted().slice(-1)[0]}
 function weightAtOrBefore(date){return allWeightSorted().filter(w=>w.date<=date).slice(-1)[0]}
 function avg(a){return a.length?a.reduce((s,v)=>s+v,0)/a.length:null}
 function pct(v,t){return t>0?Math.max(0,Math.min(100,v/t*100)):0}
-function escText(v){return esc(v)}
 function btn(text,action,cls=""){return `<button class="btn ${cls}" data-action="${action}">${text}</button>`}
 function ring(value,target,label){
  const p=pct(value,target),dash=2*Math.PI*39;
@@ -143,9 +145,7 @@ function chartSVG(points,opts={}){
  return `<div class="chartbox"><svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opts.aria||"Progress chart")}">${grid}<path d="${path}" fill="none" stroke="${opts.color||"var(--accent)"}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>${dots}${labels}</svg></div>`;
 }
 function dateRange(n,end=today()){return Array.from({length:n},(_,i)=>dateShift(end,i-(n-1)))}
-function dailyData(days){
- return days.map(date=>({date,foods:dayFoods(date),totals:sumFoods(dayFoods(date)),activity:activity(date)}));
-}
+function dailyData(days){return days.map(date=>({date,foods:dayFoods(date),totals:sumFoods(dayFoods(date)),activity:activity(date)}))}
 function pageTitle(title,sub=""){return `<div class="topline"><div><h1>${title}</h1>${sub?`<p class="muted">${sub}</p>`:""}</div></div>`}
 function render(){
  theme();
@@ -162,7 +162,7 @@ function renderToday(){
  const foods=dayFoods(),t=sumFoods(foods),a=activity(),calTarget=num(data.targets.calories,1800),proTarget=num(data.targets.protein,150);
  const remain=calTarget-t.calories;
  const meals=["Breakfast","Lunch","Dinner","Snacks"];
- let mealHtml=meals.map(meal=>{
+ const mealHtml=meals.map(meal=>{
   const fs=foods.filter(f=>(f.meal||"Snacks")===meal);
   return `<div class="mealhead"><strong>${meal}</strong><span class="hint">${Math.round(sumFoods(fs).calories)} kcal</span>${btn("+ Add","addmeal:"+meal,"small")}</div>${fs.length?`<div class="list">${fs.map(foodRow).join("")}</div>`:empty("Nothing logged yet")}`;
  }).join("");
@@ -177,19 +177,32 @@ function renderToday(){
  </div>
  <div class="grid three">
   ${statCard("STEPS",Math.round(a.steps).toLocaleString(),"","Daily activity")}
-  ${statCard("WATER",round(a.water,1),"L","Daily intake")}
+  ${statCard("WATER",round(a.water,2),"L","Daily intake")}
   ${statCard("LATEST WEIGHT",w?round(w.kg,1):"—",w?"kg":"","")}
  </div>
  <div class="row wrap">${btn("＋ Log food","gofood","primary")}${btn("＋ Log weight","goweight")}${btn("＋ Activity","activityform")}</div>
  <div class="section"><h2>Today's food</h2>${mealHtml}</div>
- <div class="section"><h2>Daily check-in</h2><div class="card"><p class="muted">Make a quick note of your steps and water.</p>${activityFormHTML(a)}</div></div>
+ <div class="section"><h2>Daily check-in</h2><div class="card"><p class="muted">Track your steps and water below. Water quick-add buttons save instantly.</p>${activityFormHTML(a)}</div></div>
  <div class="notice">Your daily totals use foods logged for today. Weight changes naturally day to day, so use longer-term trends to judge progress.</div>`;
 }
 function foodRow(f){
  return `<div class="entry"><div class="grow"><div class="name">${esc(f.name)} ${data.favorites.includes(f.name)?'<span class="accent">★</span>':""}</div><div class="sub">${esc(f.meal||"Snacks")} · ${round(f.protein)}g protein${f.date!==today()?" · "+fmtDate(f.date):""}</div></div><div class="cal">${Math.round(num(f.calories))} kcal</div><button class="iconbtn" data-action="editfood:${f.id}" aria-label="Edit ${esc(f.name)}">✎</button><button class="iconbtn" data-action="deletefood:${f.id}" aria-label="Delete ${esc(f.name)}">×</button></div>`;
 }
 function activityFormHTML(a){
- return `<form id="activityForm" class="formgrid"><div><label for="steps">Steps</label><input id="steps" name="steps" type="number" min="0" step="1" value="${num(a.steps)}"></div><div><label for="water">Water (litres)</label><input id="water" name="water" type="number" min="0" step=".1" value="${num(a.water)}"></div><div class="wide"><button class="btn primary full" type="submit">Save activity</button></div></form>`;
+ return `<form id="activityForm" class="formgrid">
+ <div><label for="steps">Steps</label><input id="steps" name="steps" type="number" min="0" step="1" value="${num(a.steps)}"></div>
+ <div><label for="water">Water consumed so far (litres)</label><input id="water" name="water" type="number" min="0" step=".05" value="${num(a.water)}"></div>
+ <div class="wide">
+  <label>Quick add water</label>
+  <div class="water-buttons">
+   <button type="button" class="btn" data-action="wateradd:0.25">+250 ml</button>
+   <button type="button" class="btn" data-action="wateradd:0.5">+500 ml</button>
+   <button type="button" class="btn" data-action="wateradd:1">+1 litre</button>
+  </div>
+  <p class="hint">Each tap adds water to today's total and saves automatically.</p>
+ </div>
+ <div class="wide"><button class="btn primary full" type="submit">Save activity</button></div>
+ </form>`;
 }
 function renderFood(){
  const foods=dayFoods(),t=sumFoods(foods);
@@ -202,18 +215,13 @@ function renderFood(){
  <div class="section"><h2>Favourites</h2>${data.favorites.length?`<div class="list">${data.favorites.map(name=>`<div class="entry"><div class="grow"><div class="name">★ ${esc(name)}</div><div class="sub">Saved favourite</div></div>${btn("Add","favadd:"+encodeURIComponent(name),"small primary")}${btn("Remove","favremove:"+encodeURIComponent(name),"small")}</div>`).join("")}</div>`:empty("Save foods as favourites from the manual entry form or search results.")}</div>
  <div class="section"><h2>Saved meals</h2>${data.savedMeals.length?`<div class="list">${data.savedMeals.map((m,i)=>`<div class="entry"><div class="grow"><div class="name">${esc(m.name)}</div><div class="sub">${Math.round(m.calories)} kcal · ${round(m.protein)}g protein</div></div>${btn("Add meal","savedmeal:"+i,"small primary")}${btn("×","delsavedmeal:"+i,"small")}</div>`).join("")}</div>`:empty("Save a meal after logging foods to add it quickly next time.")}</div>`;
 }
-function searchRow(p,i){
- return `<div class="entry"><div class="grow"><div class="name">${esc(p.name)}</div><div class="sub">${Math.round(p.calories)} kcal · ${round(p.protein)}g protein per 100g/listed serving</div></div>${btn("Add","searchadd:"+i,"small primary")}</div>`;
-}
+function searchRow(p,i){return `<div class="entry"><div class="grow"><div class="name">${esc(p.name)}</div><div class="sub">${Math.round(p.calories)} kcal · ${round(p.protein)}g protein per 100g/listed serving</div></div>${btn("Add","searchadd:"+i,"small primary")}</div>`}
 function renderWeight(){
- const weights=allWeightSorted(),latest=weights.slice(-1)[0],first=weights[0],goal=num(data.targets.goalWeight,0);
+ const weights=allWeightSorted(),latest=weights.slice(-1)[0],first=weights[0];
  const delta=weights.length>1?latest.kg-first.kg:null;
  const recent=weights.filter(w=>w.date>=dateShift(today(),-6));
  return `${pageTitle("Weight","Log weigh-ins and follow the trend, not individual fluctuations.")}
- <div class="grid">
- ${statCard("LATEST WEIGHT",latest?round(latest.kg,1):"—",latest?"kg":"",latest?fmtDate(latest.date):"Add your first weigh-in")}
- ${statCard("CHANGE SINCE FIRST",delta===null?"—":(delta>0?"+":"")+round(delta,1),delta===null?"": "kg",weights.length>1?`${fmtDate(first.date)} to ${fmtDate(latest.date)}`:"Need two weigh-ins")}
- </div>
+ <div class="grid">${statCard("LATEST WEIGHT",latest?round(latest.kg,1):"—",latest?"kg":"",latest?fmtDate(latest.date):"Add your first weigh-in")}${statCard("CHANGE SINCE FIRST",delta===null?"—":(delta>0?"+":"")+round(delta,1),delta===null?"":"kg",weights.length>1?`${fmtDate(first.date)} to ${fmtDate(latest.date)}`:"Need two weigh-ins")}</div>
  <div class="card"><h2>Log a weigh-in</h2><form id="weightForm" class="formgrid"><div><label for="weightDate">Date</label><input type="date" id="weightDate" value="${today()}" required></div><div><label for="weightKg">Weight (kg)</label><input type="number" id="weightKg" min="1" max="500" step=".1" placeholder="e.g. 82.4" required></div><div class="wide"><button class="btn primary full" type="submit">Save weight</button></div></form></div>
  <div class="card"><h2>Weight trend</h2>${chartSVG(weights.slice(-30).map(w=>({label:fmtDate(w.date),value:w.kg})),{aria:"Weight trend in kilograms"})}<div class="legend"><span>Recorded weight (kg)</span></div></div>
  <div class="card"><h2>Seven-day average</h2><div class="big">${recent.length?round(avg(recent.map(w=>w.kg)),2):"—"} <span class="unit">kg</span></div><p class="hint">${recent.length} weigh-in${recent.length===1?"":"s"} in the last seven calendar days. An average is more useful when you weigh in consistently.</p></div>
@@ -222,7 +230,7 @@ function renderWeight(){
 function renderProgress(){
  const days=dateRange(14),series=dailyData(days),weights=allWeightSorted(),goal=num(data.targets.goalWeight,0),latest=latestWeight();
  const weekW=weights.filter(w=>w.date>=dateShift(today(),-6)),weekAvg=avg(weekW.map(w=>w.kg));
- const start=weights[0],change=latest&&start?latest.kg-start.kg:null;
+ const start=weights[0];
  let estimate="Add more weigh-ins";
  if(goal>0&&latest&&latest.kg===goal)estimate="You've reached your goal weight";
  else if(goal>0&&weights.length>=3){
@@ -231,39 +239,31 @@ function renderProgress(){
    const rate=(last.kg-first.kg)/(elapsed/7),remaining=goal-last.kg;
    if(Math.abs(rate)<.02)estimate="Not enough recent change to estimate reliably";
    else if(remaining*rate<0)estimate="Your recent trend is moving away from your goal";
-   else {const weeks=remaining/rate;if(weeks>=0&&weeks<520)estimate=`About ${Math.max(0,Math.round(weeks*7))} days at your recorded trend`;else estimate="Goal date is too uncertain to estimate";}
+   else{const weeks=remaining/rate;if(weeks>=0&&weeks<520)estimate=`About ${Math.max(0,Math.round(weeks*7))} days at your recorded trend`;else estimate="Goal date is too uncertain to estimate"}
   }
  }
  const calTarget=num(data.targets.calories,1800),proTarget=num(data.targets.protein,150);
  return `${pageTitle("Progress","Your trends over time, using the records you've logged.")}
- <div class="grid">
- ${statCard("CURRENT WEIGHT",latest?round(latest.kg,1):"—",latest?"kg":"",latest?fmtDate(latest.date):"Log a weigh-in")}
- ${statCard("7-DAY WEIGHT AVG",weekAvg===null?"—":round(weekAvg,2),weekAvg===null?"":"kg",`${weekW.length} weigh-ins in range`)}
- </div>
+ <div class="grid">${statCard("CURRENT WEIGHT",latest?round(latest.kg,1):"—",latest?"kg":"",latest?fmtDate(latest.date):"Log a weigh-in")}${statCard("7-DAY WEIGHT AVG",weekAvg===null?"—":round(weekAvg,2),weekAvg===null?"":"kg",`${weekW.length} weigh-ins in range`)}</div>
  <div class="card"><h2>Weight progress</h2>${chartSVG(weights.slice(-30).map(w=>({label:fmtDate(w.date),value:w.kg})),{aria:"Recorded weight trend"})}<div class="legend"><span>Weight (kg)</span></div><p class="hint">Daily fluctuations are normal. Compare averages over several weeks.</p></div>
  <div class="card"><h2>Calorie trend · last 14 days</h2>${chartSVG(series.map(d=>({label:fmtDate(d.date),value:d.totals.calories})),{aria:"Daily calorie intake",color:"var(--blue)",min:0})}<div class="legend"><span class="bluekey">Calories</span></div><p class="hint">Days without food entries appear as zero; they may be incomplete logs, not zero intake.</p></div>
  <div class="card"><h2>Protein trend · last 14 days</h2>${chartSVG(series.map(d=>({label:fmtDate(d.date),value:d.totals.protein})),{aria:"Daily protein intake",min:0})}<div class="legend"><span>Protein (g)</span></div></div>
  <div class="card"><h2>Goal projection</h2>${goal>0?`<div class="row between"><div><div class="stat-label">GOAL WEIGHT</div><div class="big">${round(goal,1)} <span class="unit">kg</span></div></div><div class="pill">${latest?`${round(Math.abs(latest.kg-goal),1)} kg ${latest.kg>goal?"to lose":"to gain"}`:"No current weight"}</div></div><p>${esc(estimate)}</p>`:`<p class="muted">Set your goal weight in Settings to see an estimate.</p>`}<div class="notice">Estimates are mathematical projections from your logged weights, not promises. Water, food, illness and other factors can shift your weight. If your goal is below your current weight, avoid aggressive restriction.</div></div>
  <div class="card"><h2>Targets</h2><div class="grid"><div><div class="stat-label">DAILY CALORIES</div><div class="big">${calTarget}</div><div class="hint">kcal target</div></div><div><div class="stat-label">DAILY PROTEIN</div><div class="big">${proTarget}g</div><div class="hint">protein target</div></div></div>${btn("Edit targets","gosettings","primary")}</div>`;
 }
-function getWeekStart(date){const d=dateObj(date);const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);return d.toLocaleDateString("en-CA")}
+function getWeekStart(date){const d=dateObj(date);const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
 function renderWeekly(){
  const start=getWeekStart(today()),offset=weeklyOffset*7,weekStart=dateShift(start,offset),weekEnd=dateShift(weekStart,6);
  const days=Array.from({length:7},(_,i)=>dateShift(weekStart,i)),rows=dailyData(days);
- const logged=rows.filter(d=>d.foods.length>0),wts=allWeightSorted().filter(w=>w.date>=weekStart&&w.date<=weekEnd);
+ const logged=rows.filter(d=>d.foods.length>0);
  const calorieAvg=avg(logged.map(d=>d.totals.calories)),proteinAvg=avg(logged.map(d=>d.totals.protein)),stepsAvg=avg(rows.map(d=>d.activity.steps));
  const startW=weightAtOrBefore(weekStart),endW=weightAtOrBefore(weekEnd),weightChange=startW&&endW?endW.kg-startW.kg:null;
  const consistency=Math.round((logged.length/7)*100);
  return `${pageTitle("Weekly report",`${fmtDate(weekStart)} – ${fmtDate(weekEnd)}`)}
- <div class="row between">${btn("← Previous","weekprev")}${btn("This week","weektoday")}${btn("Next →","weeknext",weeklyOffset>=0?"":"")}</div>
- <div class="grid">
- ${statCard("AVG CALORIES",calorieAvg===null?"—":Math.round(calorieAvg),"kcal",`${logged.length} days with food entries`)}
- ${statCard("AVG PROTEIN",proteinAvg===null?"—":round(proteinAvg),"g","On logged-food days")}
- ${statCard("AVG STEPS",Math.round(stepsAvg||0).toLocaleString(),"","Across seven days")}
- ${statCard("WEIGHT CHANGE",weightChange===null?"—":(weightChange>0?"+":"")+round(weightChange,2),"kg","Based on nearest recorded weights")}
- </div>
+ <div class="row between">${btn("← Previous","weekprev")}${btn("This week","weektoday")}${btn("Next →","weeknext")}</div>
+ <div class="grid">${statCard("AVG CALORIES",calorieAvg===null?"—":Math.round(calorieAvg),"kcal",`${logged.length} days with food entries`)}${statCard("AVG PROTEIN",proteinAvg===null?"—":round(proteinAvg),"g","On logged-food days")}${statCard("AVG STEPS",Math.round(stepsAvg||0).toLocaleString(),"","Across seven days")}${statCard("WEIGHT CHANGE",weightChange===null?"—":(weightChange>0?"+":"")+round(weightChange,2),"kg","Based on nearest recorded weights")}</div>
  <div class="card"><div class="row between"><h2>Logging consistency</h2><div class="big">${consistency}%</div></div>${progressBar(logged.length,7)}<p class="hint">${logged.length} of 7 days have food entries. This measures logging, not how well you ate.</p></div>
- <div class="card"><h2>Daily breakdown</h2><div class="list">${rows.map(d=>`<div class="entry"><div class="grow"><div class="name">${dateObj(d.date).toLocaleDateString(undefined,{weekday:"short"})} · ${fmtDate(d.date)}</div><div class="sub">${d.foods.length} food entries · ${Math.round(d.activity.steps).toLocaleString()} steps · ${round(d.activity.water,1)}L water</div></div><div class="cal">${Math.round(d.totals.calories)} kcal<br><span class="sub">${round(d.totals.protein)}g protein</span></div></div>`).join("")}</div></div>
+ <div class="card"><h2>Daily breakdown</h2><div class="list">${rows.map(d=>`<div class="entry"><div class="grow"><div class="name">${dateObj(d.date).toLocaleDateString(undefined,{weekday:"short"})} · ${fmtDate(d.date)}</div><div class="sub">${d.foods.length} food entries · ${Math.round(d.activity.steps).toLocaleString()} steps · ${round(d.activity.water,2)}L water</div></div><div class="cal">${Math.round(d.totals.calories)} kcal<br><span class="sub">${round(d.totals.protein)}g protein</span></div></div>`).join("")}</div></div>
  <div class="card"><h2>Weekly notes</h2><p class="muted">Use this report to spot patterns, not to judge a single day. Incomplete food logs can make averages look lower than they really are.</p>${btn("Export this week's report","exportweek","primary")}</div>`;
 }
 function renderSettings(){
@@ -280,15 +280,14 @@ function renderSettings(){
  <div class="card"><h2>Backup & restore</h2><p class="muted">Export a full JSON backup before major changes. Restore a backup only when you trust the file. Restoring replaces the current FuelTrack records in this browser.</p><div class="row wrap">${btn("Export JSON backup","export","primary")}${btn("Restore JSON backup","import")}</div><p class="hint">Includes targets, foods, weights, activity, favourites, saved meals and settings.</p></div>
  <div class="card"><h2>Install on iPhone</h2><p>Open this site in Safari, tap the Share icon, then choose <strong>Add to Home Screen</strong>.</p><p class="hint">This creates a convenient home-screen shortcut. A true offline-capable web app would need additional manifest and service-worker files; this single-file version does not promise offline support.</p></div>
  <div class="card"><h2>Data status</h2><div class="grid"><div><div class="stat-label">FOOD ENTRIES</div><div class="big">${data.foods.length}</div></div><div><div class="stat-label">WEIGH-INS</div><div class="big">${data.weights.length}</div></div><div><div class="stat-label">FAVOURITES</div><div class="big">${data.favorites.length}</div></div><div><div class="stat-label">SAVED MEALS</div><div class="big">${data.savedMeals.length}</div></div></div><p class="hint">Stored in this browser on this device using local storage.</p></div>
- <footer>FuelTrack 2.0 · Built for your goals</footer>`;
+ <footer>FuelTrack 2.1 · Built for your goals</footer>`;
 }
 function addFood(obj){
  const f={id:id(),date:obj.date||today(),name:String(obj.name||"Food"),calories:Math.max(0,num(obj.calories)),protein:Math.max(0,num(obj.protein)),meal:obj.meal||selectedMeal||"Snacks"};
  data.foods.push(f);save();searchResults=[];page="food";render();
 }
 function openManual(f=null,meal=null){
- const old=f||{};
- const currentMeal=meal||old.meal||selectedMeal||"Snacks";
+ const old=f||{},currentMeal=meal||old.meal||selectedMeal||"Snacks";
  const html=`<div class="card"><div class="row between"><h2>${f?"Edit food":"Manual food entry"}</h2>${btn("Cancel","cancelmanual","small")}</div>
  <form id="manualForm" class="formgrid">
  <div class="wide"><label for="foodName">Food name</label><input id="foodName" required maxlength="160" value="${esc(old.name||"")}" placeholder="e.g. Chicken breast"></div>
@@ -299,16 +298,16 @@ function openManual(f=null,meal=null){
  <div class="wide"><label><input id="makeFavorite" type="checkbox" style="width:auto;margin-right:7px" ${data.favorites.includes(old.name)?"checked":""}> Save this food as a favourite</label></div>
  <div class="wide"><button class="btn primary full" type="submit">${f?"Save changes":"Add food"}</button></div>
  </form></div>`;
+ $("editorOverlay")?.remove();
  $("app").insertAdjacentHTML("afterbegin",`<div id="editorOverlay" style="position:relative;z-index:5">${html}</div>`);
  editingId=f?.id||null;
 }
-function closeManual(){const el=$("editorOverlay");if(el)el.remove();editingId=null}
-function saveManual(form){
+function closeManual(){$("editorOverlay")?.remove();editingId=null}
+function saveManual(){
  const name=$("foodName").value.trim(),cal=num($("foodCalories").value,-1),pro=num($("foodProtein").value,-1),meal=$("foodMeal").value,date=$("foodDate").value;
  if(!name||cal<0||pro<0||!date){alert("Please enter a food name, valid nutrition values and date.");return}
  const f={id:editingId||id(),name,calories:cal,protein:pro,meal,date};
- if(editingId){const idx=data.foods.findIndex(x=>x.id===editingId);if(idx>=0)data.foods[idx]=f;else data.foods.push(f)}
- else data.foods.push(f);
+ if(editingId){const idx=data.foods.findIndex(x=>x.id===editingId);if(idx>=0)data.foods[idx]=f;else data.foods.push(f)}else data.foods.push(f);
  if($("makeFavorite").checked&&!data.favorites.includes(name))data.favorites.push(name);
  if(!$("makeFavorite").checked)data.favorites=data.favorites.filter(n=>n!==name);
  save();closeManual();page="food";render();
@@ -356,55 +355,52 @@ async function lookupBarcode(code){
  const msg=$("scanMessage");if(msg)msg.textContent="Looking up barcode…";
  try{
   const r=await fetch("https://world.openfoodfacts.org/api/v2/product/"+encodeURIComponent(code)+".json");
-  const j=await r.json();const p=j.product;
+  const j=await r.json(),p=j.product;
   if(!p)throw new Error("Product not found");
-  const n=p.nutriments||{};
-  const calories=num(n["energy-kcal_100g"],num(n["energy-kcal_value"],num(n["energy_100g"])/4.184));
-  const protein=num(n.proteins_100g);
+  const n=p.nutriments||{},calories=num(n["energy-kcal_100g"],num(n["energy-kcal_value"],num(n["energy_100g"])/4.184)),protein=num(n.proteins_100g);
   if(!p.product_name&&!p.product_name_en)throw new Error("Product has no name");
-  if(confirm(`Found: ${p.product_name||p.product_name_en}\nPer 100g: ${Math.round(calories)} kcal, ${round(protein,1)}g protein.\n\nAdd this food?`)){
-   addFood({name:p.product_name||p.product_name_en,calories,protein,meal:selectedMeal});
-  }else if(msg)msg.textContent="Scan cancelled.";
+  if(confirm(`Found: ${p.product_name||p.product_name_en}\nPer 100g: ${Math.round(calories)} kcal, ${round(protein,1)}g protein.\n\nAdd this food?`))addFood({name:p.product_name||p.product_name_en,calories,protein,meal:selectedMeal});
+  else if(msg)msg.textContent="Scan cancelled.";
  }catch(e){if(msg)msg.textContent="Couldn't find that product. Try searching by name or enter it manually."}
 }
 async function startScanner(){
  if(!window.Html5Qrcode){alert("Scanner library couldn't load. Use food search or manual entry.");return}
  try{
-  await stopScanner();
-  scanner=new Html5Qrcode("scanner");
-  $("scanMessage").textContent="Requesting camera access…";
-  await scanner.start({facingMode:"environment"},{fps:10,qrbox:{width:230,height:150}},async decoded=>{
-   await stopScanner();await lookupBarcode(decoded);
-  },()=>{});
+  await stopScanner();scanner=new Html5Qrcode("scanner");$("scanMessage").textContent="Requesting camera access…";
+  await scanner.start({facingMode:"environment"},{fps:10,qrbox:{width:230,height:150}},async decoded=>{await stopScanner();await lookupBarcode(decoded)},()=>{});
   $("scanMessage").textContent="Point your camera at the product barcode.";
  }catch(e){$("scanMessage").textContent="Camera unavailable or permission denied. Use search or manual entry."}
 }
-async function stopScanner(){
- if(scanner){try{if(scanner.isScanning)await scanner.stop();scanner.clear()}catch(e){}scanner=null}
-}
+async function stopScanner(){if(scanner){try{if(scanner.isScanning)await scanner.stop();scanner.clear()}catch(e){}scanner=null}}
 function saveMeal(){
  const fs=dayFoods();if(!fs.length){alert("Log at least one food today before saving a meal.");return}
- const name=prompt("Name this saved meal:");
- if(!name||!name.trim())return;
+ const name=prompt("Name this saved meal:");if(!name||!name.trim())return;
  const totals=sumFoods(fs);
  data.savedMeals.push({id:id(),name:name.trim(),foods:fs.map(f=>({name:f.name,calories:f.calories,protein:f.protein,meal:f.meal||"Snacks"})),calories:totals.calories,protein:totals.protein});
  save();render();
 }
 function addSavedMeal(index){
  const meal=data.savedMeals[index];if(!meal)return;
- if(Array.isArray(meal.foods)&&meal.foods.length)meal.foods.forEach(f=>addFood({name:f.name,calories:f.calories,protein:f.protein,meal:f.meal||"Snacks"}));
- else addFood({name:meal.name,calories:meal.calories,protein:meal.protein,meal:selectedMeal});
+ if(Array.isArray(meal.foods)&&meal.foods.length){
+  meal.foods.forEach(f=>data.foods.push({id:id(),date:today(),name:String(f.name||"Food"),calories:Math.max(0,num(f.calories)),protein:Math.max(0,num(f.protein)),meal:f.meal||"Snacks"}));
+  save();page="food";render();
+ }else addFood({name:meal.name,calories:meal.calories,protein:meal.protein,meal:selectedMeal});
 }
 function exportWeek(){
- const start=getWeekStart(today()),days=Array.from({length:7},(_,i)=>dateShift(start,i));
- const rows=dailyData(days);
+ const start=getWeekStart(today()),days=Array.from({length:7},(_,i)=>dateShift(start,i)),rows=dailyData(days);
  const report={app:"FuelTrack",type:"weekly-report",weekStart:start,weekEnd:days[6],days:rows.map(d=>({date:d.date,calories:d.totals.calories,protein:d.totals.protein,foodEntries:d.foods.length,steps:d.activity.steps,water:d.activity.water})),exportedAt:new Date().toISOString()};
  const blob=new Blob([JSON.stringify(report,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
- a.href=url;a.download=`fueltrack-week-${start}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);
+ a.href=url;a.download=`fueltrack-week-${start}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
 }
 function handleAction(action){
  const [type,...rest]=action.split(":");const val=rest.join(":");
- if(type==="gofood"){page="food";render()}
+ if(type==="wateradd"){
+  const amount=Math.max(0,num(val));
+  const a=activity();
+  data.activity[today()]={...a,water:round(a.water+amount,2)};
+  if(save()){render()}
+ }
+ else if(type==="gofood"){page="food";render()}
  else if(type==="goweight"){page="weight";render();$("weightKg")?.focus()}
  else if(type==="gosettings"){page="settings";render()}
  else if(type==="activityform"){page="today";render();$("steps")?.focus()}
@@ -422,7 +418,7 @@ function handleAction(action){
  else if(type==="savemeal")saveMeal()
  else if(type==="export")exportJSON()
  else if(type==="import")$("importFile").click()
- else if(type==="theme"){setTheme(val)}
+ else if(type==="theme")setTheme(val)
  else if(type==="startscan")startScanner()
  else if(type==="stopscan"){stopScanner();if($("scanMessage"))$("scanMessage").textContent="Scanner stopped."}
  else if(type==="weekprev"){weeklyOffset--;render()}
@@ -437,10 +433,23 @@ document.addEventListener("click",e=>{
 $("themeQuick").addEventListener("click",()=>setTheme(data.settings.theme==="light"?"dark":"light"));
 $("importFile").addEventListener("change",e=>importJSON(e.target.files?.[0]));
 document.addEventListener("submit",e=>{
- if(e.target.id==="manualForm"){e.preventDefault();saveManual(e.target)}
+ if(e.target.id==="manualForm"){e.preventDefault();saveManual()}
  if(e.target.id==="weightForm"){e.preventDefault();const date=$("weightDate").value,kg=num($("weightKg").value);if(!date||kg<=0){alert("Enter a valid date and weight.");return}saveWeight(date,kg)}
- if(e.target.id==="activityForm"){e.preventDefault();data.activity[today()]={steps:Math.max(0,num($("steps").value)),water:Math.max(0,num($("water").value))};save();render()}
- if(e.target.id==="targetsForm"){e.preventDefault();const calories=num($("targetCalories").value),protein=num($("targetProtein").value);if(calories<=0||protein<=0){alert("Targets must be greater than zero.");return}data.targets.calories=calories;data.targets.protein=protein;data.targets.startWeight=$("startWeight").value?num($("startWeight").value):null;data.targets.goalWeight=$("goalWeight").value?num($("goalWeight").value):null;save();render();alert("Targets saved.")}
+ if(e.target.id==="activityForm"){
+  e.preventDefault();
+  const old=activity();
+  data.activity[today()]={...old,steps:Math.max(0,num($("steps").value)),water:Math.max(0,num($("water").value))};
+  if(save())render();
+ }
+ if(e.target.id==="targetsForm"){
+  e.preventDefault();
+  const calories=num($("targetCalories").value),protein=num($("targetProtein").value);
+  if(calories<=0||protein<=0){alert("Targets must be greater than zero.");return}
+  data.targets.calories=calories;data.targets.protein=protein;
+  data.targets.startWeight=$("startWeight").value?num($("startWeight").value):null;
+  data.targets.goalWeight=$("goalWeight").value?num($("goalWeight").value):null;
+  save();render();alert("Targets saved.");
+ }
  if(e.target.id==="foodSearchForm"){e.preventDefault();const q=$("foodSearch").value.trim();if(q)searchFood(q)}
 });
 load();theme();render();
