@@ -1,0 +1,331 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="theme-color" content="#111827">
+
+<title>FuelTrack</title>
+
+<style>
+
+:root{font-family:-apple-system,BlinkMacSystemFont,sans-serif;color:#f4f5f7;background:#101319}
+
+*{box-sizing:border-box}body{margin:0;padding:20px 16px 90px;max-width:650px;margin:auto}
+
+header{display:flex;justify-content:space-between;align-items:center;margin:12px 0 25px}
+
+h1{font-size:27px;margin:0;letter-spacing:-1px}h1 span{color:#a3e635}
+
+h2{font-size:18px;margin:0 0 15px}p{color:#a1a7b3;font-size:13px}
+
+.card{background:#1b202a;border:1px solid #303642;border-radius:18px;padding:18px;margin:14px 0}
+
+.muted{color:#a1a7b3;font-size:13px}.big{font-size:34px;font-weight:750;letter-spacing:-1px}
+
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.stat{background:#242a35;padding:14px;border-radius:13px}
+
+.stat strong{display:block;font-size:23px;margin-top:7px}
+
+.bar{height:8px;background:#343b48;border-radius:10px;overflow:hidden;margin-top:12px}
+
+.fill{height:100%;background:#a3e635;width:0%;border-radius:10px}
+
+input,select{width:100%;padding:12px;background:#111620;border:1px solid #3a4250;border-radius:10px;color:white;font-size:15px;margin:5px 0 12px}
+
+button{border:0;border-radius:10px;padding:12px;background:#a3e635;color:#151a12;font-weight:700;font-size:14px;cursor:pointer}
+
+button.secondary{background:#303744;color:white}
+
+form button{width:100%}.food{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid #343b48}
+
+.food:last-child{border-bottom:0}.food small{display:block;color:#a1a7b3;margin-top:5px}
+
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;gap:8px;background:#101319ee;padding:12px;backdrop-filter:blur(12px);border-top:1px solid #303642}
+
+nav button{width:30%;max-width:190px}
+
+[hidden]{display:none!important}
+
+label{display:block;color:#b5bbc6;font-size:13px;margin-top:5px}
+
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+
+.delete{padding:7px 10px}
+
+</style>
+
+</head>
+
+<body>
+
+<header><div><h1>Fuel<span>Track</span></h1><p>Your progress, one day at a time.</p></div><span>◉</span></header>
+
+<main id="today">
+
+<div class="card">
+
+<p id="date"></p><h2>Calories remaining</h2>
+
+<div class="big" id="remaining">1,800</div>
+
+<p id="calorieSummary">0 eaten · 1,800 daily target</p>
+
+<div class="bar"><div class="fill" id="calorieBar"></div></div>
+
+<div class="stats" style="margin-top:16px">
+
+<div class="stat"><span class="muted">Protein</span><strong id="protein">0 g</strong><span class="muted" id="proteinTarget">Target: 150 g</span></div>
+
+<div class="stat"><span class="muted">Food logged</span><strong id="foodCount">0</strong><span class="muted">Today's entries</span></div>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>Daily activity</h2>
+
+<div class="stats">
+
+<div><label for="steps">Steps</label><input id="steps" type="number" min="0" placeholder="e.g. 15000"></div>
+
+<div><label for="water">Water (litres)</label><input id="water" type="number" min="0" step="0.1" placeholder="e.g. 2.5"></div>
+
+</div>
+
+<button class="secondary" onclick="saveActivity()">Save activity</button>
+
+</div>
+
+<div class="card">
+
+<h2>Log food</h2>
+
+<form id="foodForm">
+
+<label for="foodName">Food or meal</label><input id="foodName" required placeholder="e.g. Chicken and rice">
+
+<div class="stats">
+
+<div><label for="foodCalories">Calories (kcal)</label><input id="foodCalories" type="number" min="0" required placeholder="450"></div>
+
+<div><label for="foodProtein">Protein (g)</label><input id="foodProtein" type="number" min="0" step="0.1" value="0" required></div>
+
+</div>
+
+<button type="submit">+ Add food</button>
+
+</form>
+
+</div>
+
+<div class="card"><h2>Today's food</h2><div id="foodList"><p>No food logged yet. Add your first meal above.</p></div></div>
+
+</main>
+
+<main id="weight" hidden>
+
+<div class="card">
+
+<h2>Weight tracking</h2><p>Record your weight to build your progress history.</p>
+
+<form id="weightForm">
+
+<label for="weightDate">Date</label><input id="weightDate" type="date" required>
+
+<label for="weightValue">Weight (kg)</label><input id="weightValue" type="number" min="20" max="500" step="0.1" required placeholder="e.g. 80.5">
+
+<button type="submit">Save weight</button>
+
+</form>
+
+</div>
+
+<div class="card"><h2>Latest weight</h2><div class="big" id="latestWeight">—</div><p id="weightChange">Add your first entry to begin.</p></div>
+
+<div class="card"><h2>Weight history</h2><div id="weightList"><p>No entries yet.</p></div></div>
+
+</main>
+
+<main id="settings" hidden>
+
+<div class="card"><h2>Your targets</h2>
+
+<label for="targetCalories">Daily calories (kcal)</label><input id="targetCalories" type="number" min="500" max="10000">
+
+<label for="targetProtein">Daily protein (g)</label><input id="targetProtein" type="number" min="0" max="500">
+
+<button onclick="saveTargets()">Save targets</button>
+
+<p>These are personal tracking targets, not medical recommendations.</p>
+
+</div>
+
+<div class="card"><h2>Your data</h2><p>Export a backup of your logs to a JSON file.</p><button class="secondary" onclick="exportData()">Export my data</button></div>
+
+</main>
+
+<nav>
+
+<button onclick="showTab('today')">Today</button>
+
+<button class="secondary" onclick="showTab('weight')">Weight</button>
+
+<button class="secondary" onclick="showTab('settings')">Settings</button>
+
+</nav>
+
+<script>
+
+const KEY='fueltrack-v1';
+
+const defaults={targets:{calories:1800,protein:150},foods:[],weights:[],activity:{}};
+
+let data;
+
+try{data=JSON.parse(localStorage.getItem(KEY))||defaults}catch(e){data=defaults}
+
+data.targets=data.targets||defaults.targets;
+
+data.foods=data.foods||[];
+
+data.weights=data.weights||[];
+
+data.activity=data.activity||{};
+
+const $=id=>document.getElementById(id);
+
+const today=()=>new Date().toLocaleDateString('en-CA');
+
+function save(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){alert('Could not save data on this device. Export your data and check browser storage.');}}
+
+function showTab(tab){
+
+['today','weight','settings'].forEach(id=>$(id).hidden=id!==tab);
+
+document.querySelectorAll('nav button').forEach((b,i)=>b.className=['today','weight','settings'][i]===tab?'':'secondary');
+
+if(tab==='weight')renderWeights();
+
+if(tab==='settings'){ $('targetCalories').value=data.targets.calories;$('targetProtein').value=data.targets.protein;}
+
+}
+
+function render(){
+
+const foods=data.foods.filter(f=>f.date===today());
+
+const calories=foods.reduce((s,f)=>s+f.calories,0);
+
+const protein=foods.reduce((s,f)=>s+f.protein,0);
+
+$('date').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
+
+$('remaining').textContent=(data.targets.calories-calories).toLocaleString();
+
+$('calorieSummary').textContent=calories.toLocaleString()+' eaten · '+data.targets.calories.toLocaleString()+' daily target';
+
+$('calorieBar').style.width=Math.min(100,calories/data.targets.calories*100)+'%';
+
+$('protein').textContent=protein.toFixed(1).replace(/\.0$/,'')+' g';
+
+$('proteinTarget').textContent='Target: '+data.targets.protein+' g';
+
+$('foodCount').textContent=foods.length;
+
+const a=data.activity[today()]||{steps:'',water:''};
+
+$('steps').value=a.steps;$('water').value=a.water;
+
+$('foodList').innerHTML=foods.length?foods.map(f=>`<div class="food"><div>${escapeHTML(f.name)}<small>${f.protein} g protein</small></div><div class="row"><b>${f.calories} kcal</b><button class="secondary delete" onclick="deleteFood('${f.id}')">×</button></div></div>`).join(''):'<p>No food logged yet. Add your first meal above.</p>';
+
+renderWeights();
+
+}
+
+function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+$('foodForm').addEventListener('submit',e=>{
+
+e.preventDefault();
+
+data.foods.push({id:Date.now().toString(),date:today(),name:$('foodName').value.trim(),calories:Number($('foodCalories').value),protein:Number($('foodProtein').value)});
+
+save();$('foodForm').reset();$('foodProtein').value=0;render();
+
+});
+
+function deleteFood(id){data.foods=data.foods.filter(f=>f.id!==id);save();render();}
+
+function saveActivity(){data.activity[today()]={steps:$('steps').value,water:$('water').value};save();alert('Activity saved.');}
+
+$('weightForm').addEventListener('submit',e=>{
+
+e.preventDefault();
+
+data.weights.push({date:$('weightDate').value,kg:Number($('weightValue').value),id:Date.now().toString()});
+
+data.weights.sort((a,b)=>a.date.localeCompare(b.date));save();$('weightValue').value='';renderWeights();alert('Weight saved.');
+
+});
+
+function renderWeights(){
+
+const entries=[...data.weights].sort((a,b)=>b.date.localeCompare(a.date));
+
+$('latestWeight').textContent=entries.length?entries[0].kg.toFixed(1)+' kg':'—';
+
+if(entries.length>1){
+
+const chronological=[...entries].reverse();
+
+const delta=chronological[chronological.length-1].kg-chronological[0].kg;
+
+$('weightChange').textContent=(delta>0?'+':'')+delta.toFixed(1)+' kg since first entry';
+
+}else $('weightChange').textContent=entries.length?'First recorded entry.':'Add your first entry to begin.';
+
+$('weightList').innerHTML=entries.length?entries.map(w=>`<div class="food"><span>${escapeHTML(w.date)}</span><div class="row"><b>${w.kg.toFixed(1)} kg</b><button class="secondary delete" onclick="deleteWeight('${w.id}')">×</button></div></div>`).join(''):'<p>No entries yet.</p>';
+
+}
+
+function deleteWeight(id){data.weights=data.weights.filter(w=>w.id!==id);save();renderWeights();}
+
+function saveTargets(){
+
+const c=Number($('targetCalories').value),p=Number($('targetProtein').value);
+
+if(!c||c<500||c>10000||p<0||p>500||!Number.isFinite(p)){alert('Enter valid targets.');return;}
+
+data.targets={calories:c,protein:p};save();render();alert('Targets saved.');
+
+}
+
+function exportData(){
+
+const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+
+const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='fueltrack-backup.json';a.click();URL.revokeObjectURL(url);
+
+}
+
+$('weightDate').value=today();
+
+render();
+
+</script>
+
+</body>
+
+</html>
