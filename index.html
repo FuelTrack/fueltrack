@@ -14,21 +14,33 @@
 
 <title>FuelTrack</title>
 
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
 <style>
 
 :root{font-family:-apple-system,BlinkMacSystemFont,sans-serif;color:#f4f5f7;background:#101319}
 
-*{box-sizing:border-box}body{margin:0;padding:20px 16px 90px;max-width:650px;margin:auto}
+*{box-sizing:border-box}
+
+body{margin:0;padding:20px 16px 100px;max-width:650px;margin:auto}
 
 header{display:flex;justify-content:space-between;align-items:center;margin:12px 0 25px}
 
-h1{font-size:27px;margin:0;letter-spacing:-1px}h1 span{color:#a3e635}
+h1{font-size:27px;margin:0;letter-spacing:-1px}
 
-h2{font-size:18px;margin:0 0 15px}p{color:#a1a7b3;font-size:13px}
+h1 span{color:#a3e635}
+
+h2{font-size:18px;margin:0 0 15px}
+
+h3{font-size:16px}
+
+p{color:#a1a7b3;font-size:13px;line-height:1.5}
 
 .card{background:#1b202a;border:1px solid #303642;border-radius:18px;padding:18px;margin:14px 0}
 
-.muted{color:#a1a7b3;font-size:13px}.big{font-size:34px;font-weight:750;letter-spacing:-1px}
+.muted{color:#a1a7b3;font-size:13px}
+
+.big{font-size:34px;font-weight:750;letter-spacing:-1px}
 
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
@@ -46,11 +58,15 @@ button{border:0;border-radius:10px;padding:12px;background:#a3e635;color:#151a12
 
 button.secondary{background:#303744;color:white}
 
-form button{width:100%}.food{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid #343b48}
+form button{width:100%}
 
-.food:last-child{border-bottom:0}.food small{display:block;color:#a1a7b3;margin-top:5px}
+.food{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #343b48}
 
-nav{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;gap:8px;background:#101319ee;padding:12px;backdrop-filter:blur(12px);border-top:1px solid #303642}
+.food:last-child{border-bottom:0}
+
+.food small{display:block;color:#a1a7b3;margin-top:5px;line-height:1.4}
+
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;gap:8px;background:#101319ee;padding:12px;backdrop-filter:blur(12px);border-top:1px solid #303642;z-index:5}
 
 nav button{width:30%;max-width:190px}
 
@@ -60,7 +76,29 @@ label{display:block;color:#b5bbc6;font-size:13px;margin-top:5px}
 
 .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
 
+.row input{min-width:0;flex:1}
+
+.row button{flex-shrink:0}
+
 .delete{padding:7px 10px}
+
+.search-result{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid #343b48}
+
+.search-result:last-child{border-bottom:0}
+
+.search-result>div{flex:1;min-width:0;overflow-wrap:anywhere}
+
+.search-result small{display:block;color:#a1a7b3;margin-top:5px}
+
+.search-result button{flex-shrink:0}
+
+.primary-action{width:100%;margin:5px 0 10px}
+
+.note{background:#242a35;padding:12px;border-radius:10px}
+
+#reader{width:100%;overflow:hidden;border-radius:12px}
+
+#reader video{border-radius:12px}
 
 </style>
 
@@ -68,259 +106,1061 @@ label{display:block;color:#b5bbc6;font-size:13px;margin-top:5px}
 
 <body>
 
-<header><div><h1>Fuel<span>Track</span></h1><p>Your progress, one day at a time.</p></div><span>◉</span></header>
+<header>
+
+  <div>
+
+    <h1>Fuel<span>Track</span></h1>
+
+    <p>Your progress, one day at a time.</p>
+
+  </div>
+
+  <span>◉</span>
+
+</header>
 
 <main id="today">
 
-<div class="card">
+  <div class="card">
 
-<p id="date"></p><h2>Calories remaining</h2>
+    <p id="date"></p>
 
-<div class="big" id="remaining">1,800</div>
+    <h2>Calories remaining</h2>
 
-<p id="calorieSummary">0 eaten · 1,800 daily target</p>
+    <div class="big" id="remaining">1,800</div>
 
-<div class="bar"><div class="fill" id="calorieBar"></div></div>
+    <p id="calorieSummary">0 eaten · 1,800 daily target</p>
 
-<div class="stats" style="margin-top:16px">
+    <div class="bar"><div class="fill" id="calorieBar"></div></div>
 
-<div class="stat"><span class="muted">Protein</span><strong id="protein">0 g</strong><span class="muted" id="proteinTarget">Target: 150 g</span></div>
+    <div class="stats" style="margin-top:16px">
 
-<div class="stat"><span class="muted">Food logged</span><strong id="foodCount">0</strong><span class="muted">Today's entries</span></div>
+      <div class="stat">
 
-</div>
+        <span class="muted">Protein</span>
 
-</div>
+        <strong id="protein">0 g</strong>
 
-<div class="card">
+        <span class="muted" id="proteinTarget">Target: 150 g</span>
 
-<h2>Daily activity</h2>
+      </div>
 
-<div class="stats">
+      <div class="stat">
 
-<div><label for="steps">Steps</label><input id="steps" type="number" min="0" placeholder="e.g. 15000"></div>
+        <span class="muted">Food logged</span>
 
-<div><label for="water">Water (litres)</label><input id="water" type="number" min="0" step="0.1" placeholder="e.g. 2.5"></div>
+        <strong id="foodCount">0</strong>
 
-</div>
+        <span class="muted">Today's entries</span>
 
-<button class="secondary" onclick="saveActivity()">Save activity</button>
+      </div>
 
-</div>
+    </div>
 
-<div class="card">
+  </div>
 
-<h2>Log food</h2>
+  <div class="card">
 
-<form id="foodForm">
+    <h2>Daily activity</h2>
 
-<label for="foodName">Food or meal</label><input id="foodName" required placeholder="e.g. Chicken and rice">
+    <div class="stats">
 
-<div class="stats">
+      <div>
 
-<div><label for="foodCalories">Calories (kcal)</label><input id="foodCalories" type="number" min="0" required placeholder="450"></div>
+        <label for="steps">Steps</label>
 
-<div><label for="foodProtein">Protein (g)</label><input id="foodProtein" type="number" min="0" step="0.1" value="0" required></div>
+        <input id="steps" type="number" min="0" placeholder="e.g. 15000">
 
-</div>
+      </div>
 
-<button type="submit">+ Add food</button>
+      <div>
 
-</form>
+        <label for="water">Water (litres)</label>
 
-</div>
+        <input id="water" type="number" min="0" step="0.1" placeholder="e.g. 2.5">
 
-<div class="card"><h2>Today's food</h2><div id="foodList"><p>No food logged yet. Add your first meal above.</p></div></div>
+      </div>
+
+    </div>
+
+    <button class="secondary" onclick="saveActivity()">Save activity</button>
+
+  </div>
+
+  <div class="card">
+
+    <h2>Food database</h2>
+
+    <p>Search packaged foods or scan a product barcode to look up its nutrition.</p>
+
+    <label for="foodSearch">Search for a food or product</label>
+
+    <div class="row">
+
+      <input id="foodSearch" placeholder="e.g. Greek yoghurt" autocomplete="off">
+
+      <button type="button" onclick="searchFoods()">Search</button>
+
+    </div>
+
+    <button type="button" class="secondary primary-action" onclick="startScanner()">Scan barcode with camera</button>
+
+    <div id="scannerBox" hidden>
+
+      <div id="reader"></div>
+
+      <button type="button" class="secondary primary-action" onclick="stopScanner()">Stop scanner</button>
+
+    </div>
+
+    <p id="searchStatus" aria-live="polite">Search by name or scan a barcode to get started.</p>
+
+    <div id="searchResults"></div>
+
+    <div id="selectedFoodBox" hidden>
+
+      <div class="note">
+
+        <h3 id="selectedFoodName"></h3>
+
+        <p id="selectedFoodInfo"></p>
+
+        <label for="productGrams">Amount (grams)</label>
+
+        <input id="productGrams" type="number" min="1" max="10000" step="1" value="100">
+
+        <p id="productPreview"></p>
+
+        <button type="button" class="primary-action" onclick="addSelectedProduct()">Add food to diary</button>
+
+      </div>
+
+    </div>
+
+    <p>Nutrition information comes from Open Food Facts and may be incomplete or incorrect. Check the product label when possible.</p>
+
+  </div>
+
+  <div class="card">
+
+    <h2>Log food manually</h2>
+
+    <form id="foodForm">
+
+      <label for="foodName">Food or meal</label>
+
+      <input id="foodName" required placeholder="e.g. Homemade chicken and rice">
+
+      <div class="stats">
+
+        <div>
+
+          <label for="foodCalories">Calories (kcal)</label>
+
+          <input id="foodCalories" type="number" min="0" max="100000" required placeholder="450">
+
+        </div>
+
+        <div>
+
+          <label for="foodProtein">Protein (g)</label>
+
+          <input id="foodProtein" type="number" min="0" max="10000" step="0.1" value="0" required>
+
+        </div>
+
+      </div>
+
+      <button type="submit">+ Add food</button>
+
+    </form>
+
+  </div>
+
+  <div class="card">
+
+    <h2>Today's food</h2>
+
+    <div id="foodList"><p>No food logged yet. Add your first meal above.</p></div>
+
+  </div>
 
 </main>
 
 <main id="weight" hidden>
 
-<div class="card">
+  <div class="card">
 
-<h2>Weight tracking</h2><p>Record your weight to build your progress history.</p>
+    <h2>Weight tracking</h2>
 
-<form id="weightForm">
+    <p>Record your weight to build your progress history.</p>
 
-<label for="weightDate">Date</label><input id="weightDate" type="date" required>
+    <form id="weightForm">
 
-<label for="weightValue">Weight (kg)</label><input id="weightValue" type="number" min="20" max="500" step="0.1" required placeholder="e.g. 80.5">
+      <label for="weightDate">Date</label>
 
-<button type="submit">Save weight</button>
+      <input id="weightDate" type="date" required>
 
-</form>
+      <label for="weightValue">Weight (kg)</label>
 
-</div>
+      <input id="weightValue" type="number" min="20" max="500" step="0.1" required placeholder="e.g. 80.5">
 
-<div class="card"><h2>Latest weight</h2><div class="big" id="latestWeight">—</div><p id="weightChange">Add your first entry to begin.</p></div>
+      <button type="submit">Save weight</button>
 
-<div class="card"><h2>Weight history</h2><div id="weightList"><p>No entries yet.</p></div></div>
+    </form>
+
+  </div>
+
+  <div class="card">
+
+    <h2>Latest weight</h2>
+
+    <div class="big" id="latestWeight">—</div>
+
+    <p id="weightChange">Add your first entry to begin.</p>
+
+  </div>
+
+  <div class="card">
+
+    <h2>Weight history</h2>
+
+    <div id="weightList"><p>No entries yet.</p></div>
+
+  </div>
 
 </main>
 
 <main id="settings" hidden>
 
-<div class="card"><h2>Your targets</h2>
+  <div class="card">
 
-<label for="targetCalories">Daily calories (kcal)</label><input id="targetCalories" type="number" min="500" max="10000">
+    <h2>Your targets</h2>
 
-<label for="targetProtein">Daily protein (g)</label><input id="targetProtein" type="number" min="0" max="500">
+    <label for="targetCalories">Daily calories (kcal)</label>
 
-<button onclick="saveTargets()">Save targets</button>
+    <input id="targetCalories" type="number" min="500" max="10000">
 
-<p>These are personal tracking targets, not medical recommendations.</p>
+    <label for="targetProtein">Daily protein (g)</label>
 
-</div>
+    <input id="targetProtein" type="number" min="0" max="500">
 
-<div class="card"><h2>Your data</h2><p>Export a backup of your logs to a JSON file.</p><button class="secondary" onclick="exportData()">Export my data</button></div>
+    <button onclick="saveTargets()">Save targets</button>
+
+    <p>These are personal tracking targets, not medical recommendations.</p>
+
+  </div>
+
+  <div class="card">
+
+    <h2>Your data</h2>
+
+    <p>Export a backup of your logs to a JSON file.</p>
+
+    <button class="secondary" onclick="exportData()">Export my data</button>
+
+  </div>
 
 </main>
 
 <nav>
 
-<button onclick="showTab('today')">Today</button>
+  <button onclick="showTab('today')">Today</button>
 
-<button class="secondary" onclick="showTab('weight')">Weight</button>
+  <button class="secondary" onclick="showTab('weight')">Weight</button>
 
-<button class="secondary" onclick="showTab('settings')">Settings</button>
+  <button class="secondary" onclick="showTab('settings')">Settings</button>
 
 </nav>
 
 <script>
 
-const KEY='fueltrack-v1';
+'use strict';
 
-const defaults={targets:{calories:1800,protein:150},foods:[],weights:[],activity:{}};
+const KEY = 'fueltrack-v1';
+
+const defaults = {
+
+  targets: { calories: 1800, protein: 150 },
+
+  foods: [],
+
+  weights: [],
+
+  activity: {}
+
+};
 
 let data;
 
-try{data=JSON.parse(localStorage.getItem(KEY))||defaults}catch(e){data=defaults}
+try {
 
-data.targets=data.targets||defaults.targets;
+  data = JSON.parse(localStorage.getItem(KEY)) || defaults;
 
-data.foods=data.foods||[];
+} catch (e) {
 
-data.weights=data.weights||[];
-
-data.activity=data.activity||{};
-
-const $=id=>document.getElementById(id);
-
-const today=()=>new Date().toLocaleDateString('en-CA');
-
-function save(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){alert('Could not save data on this device. Export your data and check browser storage.');}}
-
-function showTab(tab){
-
-['today','weight','settings'].forEach(id=>$(id).hidden=id!==tab);
-
-document.querySelectorAll('nav button').forEach((b,i)=>b.className=['today','weight','settings'][i]===tab?'':'secondary');
-
-if(tab==='weight')renderWeights();
-
-if(tab==='settings'){ $('targetCalories').value=data.targets.calories;$('targetProtein').value=data.targets.protein;}
+  data = defaults;
 
 }
 
-function render(){
+data.targets = data.targets || defaults.targets;
 
-const foods=data.foods.filter(f=>f.date===today());
+data.foods = data.foods || [];
 
-const calories=foods.reduce((s,f)=>s+f.calories,0);
+data.weights = data.weights || [];
 
-const protein=foods.reduce((s,f)=>s+f.protein,0);
+data.activity = data.activity || {};
 
-$('date').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
+const $ = id => document.getElementById(id);
 
-$('remaining').textContent=(data.targets.calories-calories).toLocaleString();
+function today() {
 
-$('calorieSummary').textContent=calories.toLocaleString()+' eaten · '+data.targets.calories.toLocaleString()+' daily target';
+  const d = new Date();
 
-$('calorieBar').style.width=Math.min(100,calories/data.targets.calories*100)+'%';
+  return d.getFullYear() + '-' +
 
-$('protein').textContent=protein.toFixed(1).replace(/\.0$/,'')+' g';
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
 
-$('proteinTarget').textContent='Target: '+data.targets.protein+' g';
-
-$('foodCount').textContent=foods.length;
-
-const a=data.activity[today()]||{steps:'',water:''};
-
-$('steps').value=a.steps;$('water').value=a.water;
-
-$('foodList').innerHTML=foods.length?foods.map(f=>`<div class="food"><div>${escapeHTML(f.name)}<small>${f.protein} g protein</small></div><div class="row"><b>${f.calories} kcal</b><button class="secondary delete" onclick="deleteFood('${f.id}')">×</button></div></div>`).join(''):'<p>No food logged yet. Add your first meal above.</p>';
-
-renderWeights();
+    String(d.getDate()).padStart(2, '0');
 
 }
 
-function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function save() {
 
-$('foodForm').addEventListener('submit',e=>{
+  try {
 
-e.preventDefault();
+    localStorage.setItem(KEY, JSON.stringify(data));
 
-data.foods.push({id:Date.now().toString(),date:today(),name:$('foodName').value.trim(),calories:Number($('foodCalories').value),protein:Number($('foodProtein').value)});
+  } catch (e) {
 
-save();$('foodForm').reset();$('foodProtein').value=0;render();
+    alert('Could not save data on this device. Export your data and check browser storage.');
+
+  }
+
+}
+
+function escapeHTML(s) {
+
+  return String(s).replace(/[&<>"']/g, c => ({
+
+    '&': '&amp;', '<': '&lt;', '>': '&gt;',
+
+    '"': '&quot;', "'": '&#39;'
+
+  }[c]));
+
+}
+
+function showTab(tab) {
+
+  ['today', 'weight', 'settings'].forEach(id => {
+
+    $(id).hidden = id !== tab;
+
+  });
+
+  document.querySelectorAll('nav button').forEach((b, i) => {
+
+    b.className = ['today', 'weight', 'settings'][i] === tab ? '' : 'secondary';
+
+  });
+
+  if (tab === 'weight') renderWeights();
+
+  if (tab === 'settings') {
+
+    $('targetCalories').value = data.targets.calories;
+
+    $('targetProtein').value = data.targets.protein;
+
+  }
+
+}
+
+function render() {
+
+  const foods = data.foods.filter(f => f.date === today());
+
+  const calories = foods.reduce((s, f) => s + Number(f.calories || 0), 0);
+
+  const protein = foods.reduce((s, f) => s + Number(f.protein || 0), 0);
+
+  $('date').textContent = new Date().toLocaleDateString(undefined, {
+
+    weekday: 'long', day: 'numeric', month: 'long'
+
+  });
+
+  $('remaining').textContent = (data.targets.calories - calories).toLocaleString();
+
+  $('calorieSummary').textContent =
+
+    calories.toLocaleString() + ' eaten · ' +
+
+    data.targets.calories.toLocaleString() + ' daily target';
+
+  $('calorieBar').style.width =
+
+    Math.min(100, calories / data.targets.calories * 100) + '%';
+
+  $('protein').textContent = protein.toFixed(1).replace(/\.0$/, '') + ' g';
+
+  $('proteinTarget').textContent = 'Target: ' + data.targets.protein + ' g';
+
+  $('foodCount').textContent = foods.length;
+
+  const a = data.activity[today()] || { steps: '', water: '' };
+
+  $('steps').value = a.steps;
+
+  $('water').value = a.water;
+
+  $('foodList').innerHTML = foods.length
+
+    ? foods.map(f =>
+
+      '<div class="food"><div>' + escapeHTML(f.name) +
+
+      '<small>' + Number(f.protein || 0) + ' g protein</small></div>' +
+
+      '<div class="row"><b>' + Number(f.calories || 0) +
+
+      ' kcal</b><button class="secondary delete" onclick="deleteFood(' +
+
+      JSON.stringify(String(f.id)) + ')">×</button></div></div>'
+
+    ).join('')
+
+    : '<p>No food logged yet. Add your first meal above.</p>';
+
+  renderWeights();
+
+}
+
+function addFood(name, calories, protein) {
+
+  data.foods.push({
+
+    id: Date.now().toString() + Math.random().toString(16).slice(2),
+
+    date: today(),
+
+    name: name,
+
+    calories: Math.round(calories),
+
+    protein: Math.round(protein * 10) / 10
+
+  });
+
+  save();
+
+  render();
+
+}
+
+$('foodForm').addEventListener('submit', e => {
+
+  e.preventDefault();
+
+  const name = $('foodName').value.trim();
+
+  const calories = Number($('foodCalories').value);
+
+  const protein = Number($('foodProtein').value);
+
+  if (!name || !Number.isFinite(calories) || calories < 0 ||
+
+      !Number.isFinite(protein) || protein < 0) {
+
+    alert('Please enter a food name and valid nutrition values.');
+
+    return;
+
+  }
+
+  addFood(name, calories, protein);
+
+  $('foodForm').reset();
+
+  $('foodProtein').value = 0;
 
 });
 
-function deleteFood(id){data.foods=data.foods.filter(f=>f.id!==id);save();render();}
+function deleteFood(id) {
 
-function saveActivity(){data.activity[today()]={steps:$('steps').value,water:$('water').value};save();alert('Activity saved.');}
+  data.foods = data.foods.filter(f => String(f.id) !== String(id));
 
-$('weightForm').addEventListener('submit',e=>{
+  save();
 
-e.preventDefault();
+  render();
 
-data.weights.push({date:$('weightDate').value,kg:Number($('weightValue').value),id:Date.now().toString()});
+}
 
-data.weights.sort((a,b)=>a.date.localeCompare(b.date));save();$('weightValue').value='';renderWeights();alert('Weight saved.');
+function saveActivity() {
+
+  const steps = $('steps').value;
+
+  const water = $('water').value;
+
+  if ((steps !== '' && Number(steps) < 0) ||
+
+      (water !== '' && Number(water) < 0)) {
+
+    alert('Activity values cannot be negative.');
+
+    return;
+
+  }
+
+  data.activity[today()] = { steps, water };
+
+  save();
+
+  alert('Activity saved.');
+
+}
+
+$('weightForm').addEventListener('submit', e => {
+
+  e.preventDefault();
+
+  data.weights.push({
+
+    date: $('weightDate').value,
+
+    kg: Number($('weightValue').value),
+
+    id: Date.now().toString()
+
+  });
+
+  data.weights.sort((a, b) => a.date.localeCompare(b.date));
+
+  save();
+
+  $('weightValue').value = '';
+
+  renderWeights();
+
+  alert('Weight saved.');
 
 });
 
-function renderWeights(){
+function renderWeights() {
 
-const entries=[...data.weights].sort((a,b)=>b.date.localeCompare(a.date));
+  const entries = [...data.weights].sort((a, b) => b.date.localeCompare(a.date));
 
-$('latestWeight').textContent=entries.length?entries[0].kg.toFixed(1)+' kg':'—';
+  $('latestWeight').textContent = entries.length
 
-if(entries.length>1){
+    ? Number(entries[0].kg).toFixed(1) + ' kg'
 
-const chronological=[...entries].reverse();
+    : '—';
 
-const delta=chronological[chronological.length-1].kg-chronological[0].kg;
+  if (entries.length > 1) {
 
-$('weightChange').textContent=(delta>0?'+':'')+delta.toFixed(1)+' kg since first entry';
+    const chronological = [...entries].reverse();
 
-}else $('weightChange').textContent=entries.length?'First recorded entry.':'Add your first entry to begin.';
+    const delta = chronological[chronological.length - 1].kg - chronological[0].kg;
 
-$('weightList').innerHTML=entries.length?entries.map(w=>`<div class="food"><span>${escapeHTML(w.date)}</span><div class="row"><b>${w.kg.toFixed(1)} kg</b><button class="secondary delete" onclick="deleteWeight('${w.id}')">×</button></div></div>`).join(''):'<p>No entries yet.</p>';
+    $('weightChange').textContent =
+
+      (delta > 0 ? '+' : '') + delta.toFixed(1) + ' kg since first entry';
+
+  } else {
+
+    $('weightChange').textContent = entries.length
+
+      ? 'First recorded entry.'
+
+      : 'Add your first entry to begin.';
+
+  }
+
+  $('weightList').innerHTML = entries.length
+
+    ? entries.map(w =>
+
+      '<div class="food"><span>' + escapeHTML(w.date) +
+
+      '</span><div class="row"><b>' + Number(w.kg).toFixed(1) +
+
+      ' kg</b><button class="secondary delete" onclick="deleteWeight(' +
+
+      JSON.stringify(String(w.id)) + ')">×</button></div></div>'
+
+    ).join('')
+
+    : '<p>No entries yet.</p>';
 
 }
 
-function deleteWeight(id){data.weights=data.weights.filter(w=>w.id!==id);save();renderWeights();}
+function deleteWeight(id) {
 
-function saveTargets(){
+  data.weights = data.weights.filter(w => String(w.id) !== String(id));
 
-const c=Number($('targetCalories').value),p=Number($('targetProtein').value);
+  save();
 
-if(!c||c<500||c>10000||p<0||p>500||!Number.isFinite(p)){alert('Enter valid targets.');return;}
-
-data.targets={calories:c,protein:p};save();render();alert('Targets saved.');
+  renderWeights();
 
 }
 
-function exportData(){
+function saveTargets() {
 
-const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const c = Number($('targetCalories').value);
 
-const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='fueltrack-backup.json';a.click();URL.revokeObjectURL(url);
+  const p = Number($('targetProtein').value);
+
+  if (!c || c < 500 || c > 10000 || !Number.isFinite(p) || p < 0 || p > 500) {
+
+    alert('Enter valid targets.');
+
+    return;
+
+  }
+
+  data.targets = { calories: c, protein: p };
+
+  save();
+
+  render();
+
+  alert('Targets saved.');
 
 }
 
-$('weightDate').value=today();
+function exportData() {
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+
+    type: 'application/json'
+
+  });
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+
+  a.href = url;
+
+  a.download = 'fueltrack-backup.json';
+
+  a.click();
+
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+}
+
+/* FOOD DATABASE */
+
+let searchProducts = [];
+
+let selectedProduct = null;
+
+let barcodeScanner = null;
+
+let scannerStarting = false;
+
+function productCalories(p) {
+
+  const n = p.nutriments || {};
+
+  const value = n['energy-kcal_100g'] ?? n['energy-kcal'];
+
+  return Number(value) || 0;
+
+}
+
+function productProtein(p) {
+
+  const n = p.nutriments || {};
+
+  return Number(n['proteins_100g']) || 0;
+
+}
+
+function productLabel(p) {
+
+  return [p.product_name, p.brands].filter(Boolean).join(' — ') ||
+
+    'Unnamed product';
+
+}
+
+async function searchFoods() {
+
+  const term = $('foodSearch').value.trim();
+
+  if (!term) {
+
+    $('searchStatus').textContent = 'Enter a food or product name first.';
+
+    return;
+
+  }
+
+  $('searchStatus').textContent = 'Searching food database…';
+
+  $('searchResults').innerHTML = '';
+
+  $('selectedFoodBox').hidden = true;
+
+  selectedProduct = null;
+
+  try {
+
+    const params = new URLSearchParams({
+
+      search_terms: term,
+
+      search_simple: '1',
+
+      action: 'process',
+
+      json: '1',
+
+      page_size: '10',
+
+      fields: 'product_name,brands,code,nutriments,serving_size'
+
+    });
+
+    const response = await fetch(
+
+      'https://world.openfoodfacts.org/cgi/search.pl?' + params.toString()
+
+    );
+
+    if (!response.ok) throw new Error('Search failed');
+
+    const result = await response.json();
+
+    searchProducts = (result.products || []).filter(
+
+      p => p.product_name && productCalories(p) > 0
+
+    );
+
+    if (!searchProducts.length) {
+
+      $('searchStatus').textContent =
+
+        'No matching products with calorie information found. Try another search.';
+
+      return;
+
+    }
+
+    $('searchStatus').textContent =
+
+      'Choose a product. Nutrition values are shown per 100 g.';
+
+    $('searchResults').innerHTML = searchProducts.map((p, i) =>
+
+      '<div class="search-result"><div><b>' + escapeHTML(productLabel(p)) +
+
+      '</b><small>' + productCalories(p) + ' kcal · ' +
+
+      productProtein(p).toFixed(1) + ' g protein per 100 g</small></div>' +
+
+      '<button type="button" onclick="selectSearchProduct(' + i + ')">Select</button></div>'
+
+    ).join('');
+
+  } catch (e) {
+
+    $('searchStatus').textContent =
+
+      'Could not reach the food database. Check your internet connection and try again.';
+
+  }
+
+}
+
+$('foodSearch').addEventListener('keydown', e => {
+
+  if (e.key === 'Enter') {
+
+    e.preventDefault();
+
+    searchFoods();
+
+  }
+
+});
+
+function selectSearchProduct(index) {
+
+  const p = searchProducts[index];
+
+  if (p) selectProduct(p);
+
+}
+
+async function lookupBarcode(code) {
+
+  $('searchStatus').textContent = 'Looking up barcode…';
+
+  $('searchResults').innerHTML = '';
+
+  $('selectedFoodBox').hidden = true;
+
+  selectedProduct = null;
+
+  try {
+
+    const response = await fetch(
+
+      'https://world.openfoodfacts.org/api/v2/product/' +
+
+      encodeURIComponent(code) +
+
+      '.json?fields=product_name,brands,code,nutriments,serving_size'
+
+    );
+
+    if (!response.ok) throw new Error('Lookup failed');
+
+    const result = await response.json();
+
+    if (result.status !== 1 || !result.product) {
+
+      $('searchStatus').textContent =
+
+        'Barcode not found. Try searching for the product name instead.';
+
+      return;
+
+    }
+
+    if (!productCalories(result.product)) {
+
+      $('searchStatus').textContent =
+
+        'Product found, but its calorie information is missing.';
+
+      return;
+
+    }
+
+    selectProduct(result.product);
+
+    $('searchStatus').textContent =
+
+      'Product found. Check the serving size before adding it.';
+
+  } catch (e) {
+
+    $('searchStatus').textContent =
+
+      'Could not look up this barcode. Please check your connection and try again.';
+
+  }
+
+}
+
+function selectProduct(p) {
+
+  selectedProduct = p;
+
+  $('selectedFoodName').textContent = productLabel(p);
+
+  $('selectedFoodInfo').textContent =
+
+    'Nutrition values per 100 g. Check the package label if available.';
+
+  const servingText = String(p.serving_size || '');
+
+  const servingMatch = servingText.match(/(\d+(?:\.\d+)?)\s*g\b/i);
+
+  const serving = servingMatch ? Number(servingMatch[1]) : 100;
+
+  $('productGrams').value =
+
+    Number.isFinite(serving) && serving > 0 ? serving : 100;
+
+  $('selectedFoodBox').hidden = false;
+
+  updateProductPreview();
+
+}
+
+function updateProductPreview() {
+
+  if (!selectedProduct) return;
+
+  const grams = Number($('productGrams').value);
+
+  if (!Number.isFinite(grams) || grams <= 0 || grams > 10000) {
+
+    $('productPreview').textContent = 'Enter an amount between 1 and 10,000 grams.';
+
+    return;
+
+  }
+
+  const factor = grams / 100;
+
+  $('productPreview').textContent =
+
+    Math.round(productCalories(selectedProduct) * factor) + ' kcal · ' +
+
+    (productProtein(selectedProduct) * factor).toFixed(1) +
+
+    ' g protein for ' + grams + ' g';
+
+}
+
+$('productGrams').addEventListener('input', updateProductPreview);
+
+function addSelectedProduct() {
+
+  if (!selectedProduct) return;
+
+  const grams = Number($('productGrams').value);
+
+  if (!Number.isFinite(grams) || grams <= 0 || grams > 10000) {
+
+    alert('Enter a valid amount between 1 and 10,000 grams.');
+
+    return;
+
+  }
+
+  const factor = grams / 100;
+
+  const calories = productCalories(selectedProduct) * factor;
+
+  const protein = productProtein(selectedProduct) * factor;
+
+  const name = productLabel(selectedProduct) + ' (' + grams + ' g)';
+
+  addFood(name, calories, protein);
+
+  selectedProduct = null;
+
+  $('selectedFoodBox').hidden = true;
+
+  $('searchStatus').textContent = 'Food added to your diary.';
+
+}
+
+async function startScanner() {
+
+  if (scannerStarting || barcodeScanner) return;
+
+  if (!window.Html5Qrcode) {
+
+    $('searchStatus').textContent =
+
+      'The scanner library did not load. Check your connection and refresh the page.';
+
+    return;
+
+  }
+
+  if (!window.isSecureContext) {
+
+    $('searchStatus').textContent =
+
+      'Camera scanning requires a secure HTTPS website.';
+
+    return;
+
+  }
+
+  scannerStarting = true;
+
+  $('scannerBox').hidden = false;
+
+  $('searchStatus').textContent =
+
+    'Starting camera. Allow camera access if Safari asks.';
+
+  try {
+
+    const scanner = new Html5Qrcode('reader');
+
+    barcodeScanner = scanner;
+
+    await scanner.start(
+
+      { facingMode: 'environment' },
+
+      { fps: 10, qrbox: { width: 250, height: 140 } },
+
+      async code => {
+
+        if (barcodeScanner !== scanner) return;
+
+        await stopScanner();
+
+        await lookupBarcode(code);
+
+      },
+
+      () => {}
+
+    );
+
+    $('searchStatus').textContent =
+
+      'Point your camera at the product barcode.';
+
+  } catch (e) {
+
+    barcodeScanner = null;
+
+    $('scannerBox').hidden = true;
+
+    $('searchStatus').textContent =
+
+      'Camera unavailable. Allow camera access in Safari, close other camera apps and try again.';
+
+    try {
+
+      await scanner.clear();
+
+    } catch (ignored) {}
+
+  } finally {
+
+    scannerStarting = false;
+
+  }
+
+}
+
+async function stopScanner() {
+
+  const scanner = barcodeScanner;
+
+  barcodeScanner = null;
+
+  $('scannerBox').hidden = true;
+
+  if (scanner) {
+
+    try {
+
+      await scanner.stop();
+
+    } catch (e) {}
+
+    try {
+
+      await scanner.clear();
+
+    } catch (e) {}
+
+  }
+
+}
+
+/* START APP */
+
+$('weightDate').value = today();
 
 render();
 
