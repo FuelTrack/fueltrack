@@ -39,6 +39,9 @@ p{margin:5px 0 12px}.muted,.hint{color:var(--muted)}.hint{font-size:12px}
 input,select,textarea{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--text);padding:11px 12px;border-radius:11px;outline:none;min-width:0}
 input:focus,select:focus,textarea:focus{border-color:var(--accent)}label{display:block;font-size:12px;font-weight:750;color:var(--muted);margin:10px 0 6px}
 .formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.formgrid .wide{grid-column:1/-1}
+.activity-subform{min-width:0;display:flex;flex-direction:column;align-items:stretch}
+.activity-subform label{margin-top:0}
+.activity-subform .btn{margin-top:10px;min-height:42px}
 .list{display:flex;flex-direction:column;gap:8px}.entry{display:flex;align-items:center;gap:10px;background:var(--panel2);border-radius:12px;padding:10px}.entry .name{font-weight:750;overflow-wrap:anywhere}.entry .sub{font-size:11px;color:var(--muted)}.entry .cal{font-size:13px;font-weight:800;white-space:nowrap}
 .mealhead{display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px}
 .empty{padding:20px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:14px;font-size:13px}
@@ -182,27 +185,36 @@ function renderToday(){
  </div>
  <div class="row wrap">${btn("＋ Log food","gofood","primary")}${btn("＋ Log weight","goweight")}${btn("＋ Activity","activityform")}</div>
  <div class="section"><h2>Today's food</h2>${mealHtml}</div>
- <div class="section"><h2>Daily check-in</h2><div class="card"><p class="muted">Track your steps and water below. Water quick-add buttons save instantly.</p>${activityFormHTML(a)}</div></div>
+ <div class="section"><h2>Daily check-in</h2><div class="card"><p class="muted">Track your steps and water below. Save either section independently; water quick-add buttons save instantly.</p>${activityFormHTML(a)}</div></div>
  <div class="notice">Your daily totals use foods logged for today. Weight changes naturally day to day, so use longer-term trends to judge progress.</div>`;
 }
 function foodRow(f){
  return `<div class="entry"><div class="grow"><div class="name">${esc(f.name)} ${data.favorites.includes(f.name)?'<span class="accent">★</span>':""}</div><div class="sub">${esc(f.meal||"Snacks")} · ${round(f.protein)}g protein${f.date!==today()?" · "+fmtDate(f.date):""}</div></div><div class="cal">${Math.round(num(f.calories))} kcal</div><button class="iconbtn" data-action="editfood:${f.id}" aria-label="Edit ${esc(f.name)}">✎</button><button class="iconbtn" data-action="deletefood:${f.id}" aria-label="Delete ${esc(f.name)}">×</button></div>`;
 }
+
+/* UPDATED: steps and water have separate forms and save buttons. */
 function activityFormHTML(a){
- return `<form id="activityForm" class="formgrid">
- <div><label for="steps">Steps</label><input id="steps" name="steps" type="number" min="0" step="1" value="${num(a.steps)}"></div>
- <div><label for="water">Water consumed so far (litres)</label><input id="water" name="water" type="number" min="0" step=".05" value="${num(a.water)}"></div>
- <div class="wide">
-  <label>Quick add water</label>
-  <div class="water-buttons">
-   <button type="button" class="btn" data-action="wateradd:0.25">+250 ml</button>
-   <button type="button" class="btn" data-action="wateradd:0.5">+500 ml</button>
-   <button type="button" class="btn" data-action="wateradd:1">+1 litre</button>
+ return `<div class="formgrid">
+  <form id="stepsForm" class="activity-subform">
+   <label for="steps">Steps</label>
+   <input id="steps" name="steps" type="number" min="0" step="1" value="${num(a.steps)}">
+   <button class="btn primary full" type="submit">Save steps</button>
+  </form>
+  <form id="waterForm" class="activity-subform">
+   <label for="water">Water consumed (litres)</label>
+   <input id="water" name="water" type="number" min="0" step=".05" value="${num(a.water)}">
+   <button class="btn primary full" type="submit">Save water</button>
+  </form>
+  <div class="wide">
+   <label>Quick add water</label>
+   <div class="water-buttons">
+    <button type="button" class="btn" data-action="wateradd:0.25">+250 ml</button>
+    <button type="button" class="btn" data-action="wateradd:0.5">+500 ml</button>
+    <button type="button" class="btn" data-action="wateradd:1">+1 litre</button>
+   </div>
+   <p class="hint">Each tap adds to today's water total and saves automatically without changing your steps.</p>
   </div>
-  <p class="hint">Each tap adds water to today's total and saves automatically.</p>
- </div>
- <div class="wide"><button class="btn primary full" type="submit">Save activity</button></div>
- </form>`;
+ </div>`;
 }
 function renderFood(){
  const foods=dayFoods(),t=sumFoods(foods);
@@ -396,9 +408,9 @@ function handleAction(action){
  const [type,...rest]=action.split(":");const val=rest.join(":");
  if(type==="wateradd"){
   const amount=Math.max(0,num(val));
-  const a=activity();
-  data.activity[today()]={...a,water:round(a.water+amount,2)};
-  if(save()){render()}
+  const current=activity();
+  data.activity[today()]={...current,water:round(Math.max(0,num(current.water))+amount,2)};
+  if(save())render();
  }
  else if(type==="gofood"){page="food";render()}
  else if(type==="goweight"){page="weight";render();$("weightKg")?.focus()}
@@ -435,12 +447,21 @@ $("importFile").addEventListener("change",e=>importJSON(e.target.files?.[0]));
 document.addEventListener("submit",e=>{
  if(e.target.id==="manualForm"){e.preventDefault();saveManual()}
  if(e.target.id==="weightForm"){e.preventDefault();const date=$("weightDate").value,kg=num($("weightKg").value);if(!date||kg<=0){alert("Enter a valid date and weight.");return}saveWeight(date,kg)}
- if(e.target.id==="activityForm"){
+
+ /* UPDATED: save only the field belonging to the submitted form. */
+ if(e.target.id==="stepsForm"){
   e.preventDefault();
-  const old=activity();
-  data.activity[today()]={...old,steps:Math.max(0,num($("steps").value)),water:Math.max(0,num($("water").value))};
+  const current=activity();
+  data.activity[today()]={...current,steps:Math.max(0,num($("steps").value))};
   if(save())render();
  }
+ if(e.target.id==="waterForm"){
+  e.preventDefault();
+  const current=activity();
+  data.activity[today()]={...current,water:Math.max(0,num($("water").value))};
+  if(save())render();
+ }
+
  if(e.target.id==="targetsForm"){
   e.preventDefault();
   const calories=num($("targetCalories").value),protein=num($("targetProtein").value);
