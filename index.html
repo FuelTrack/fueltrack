@@ -42,6 +42,90 @@ input[type=checkbox]{width:auto}.formgrid{display:grid;grid-template-columns:rep
 #scanner{width:100%;overflow:hidden;border-radius:12px;margin-top:10px}footer{text-align:center;color:var(--muted);font-size:11px;padding:10px}
 @media(min-width:620px){nav{left:50%;right:auto;transform:translateX(-50%);width:min(100%,760px);border-left:1px solid var(--line);border-right:1px solid var(--line);border-radius:18px 18px 0 0;padding-left:12px;padding-right:12px}}
 @media(max-width:380px){main{padding-left:10px;padding-right:10px}.card{padding:12px}.big{font-size:24px}.three{gap:7px}.three .card{padding:10px}.entry{gap:5px}}
+
+/* FUELTRACK 3.0 — BLACK & PURPLE GRADIENT THEME */
+
+/* Black-to-purple background in dark mode */
+:root:not([data-theme="light"]) body{
+  background:linear-gradient(145deg,#08070D 0%,#171023 50%,#29113E 100%);
+  background-attachment:fixed;
+  min-height:100vh;
+}
+
+/* Glass-like header */
+:root:not([data-theme="light"]) header{
+  background:rgba(10,8,15,.92);
+  -webkit-backdrop-filter:blur(14px);
+  backdrop-filter:blur(14px);
+  border-bottom-color:rgba(192,132,252,.18);
+}
+
+/* Purple-tinted bottom navigation */
+:root:not([data-theme="light"]) nav{
+  background:linear-gradient(135deg,rgba(16,11,24,.97),rgba(33,19,47,.97));
+  -webkit-backdrop-filter:blur(16px);
+  backdrop-filter:blur(16px);
+  border-top-color:#382547;
+}
+
+/* Rich purple highlight for the active navigation tab */
+:root:not([data-theme="light"]) nav button.active{
+  color:#E0C3FF;
+  background:linear-gradient(135deg,#302044 0%,#48245F 100%);
+}
+
+/* Cards with subtle purple depth */
+:root:not([data-theme="light"]) .card{
+  background:linear-gradient(145deg,rgba(23,18,31,.96) 0%,rgba(33,21,46,.96) 100%);
+  border-color:#382547;
+  box-shadow:0 10px 30px rgba(0,0,0,.18);
+}
+
+/* Purple gradient for main action buttons */
+:root:not([data-theme="light"]) .btn.primary{
+  background:linear-gradient(135deg,#7136C8 0%,#B14DDE 100%);
+  color:#FFFFFF;
+  border-color:transparent;
+  box-shadow:0 4px 14px rgba(145,65,210,.2);
+}
+
+/* Slightly brighter purple when pressing primary buttons */
+:root:not([data-theme="light"]) .btn.primary:active{
+  background:linear-gradient(135deg,#6028B4 0%,#9637C8 100%);
+}
+
+/* Gradient progress bars */
+:root:not([data-theme="light"]) .progress>div{
+  background:linear-gradient(90deg,#7136C8 0%,#C05CE8 100%);
+}
+
+/* Purple focus highlight for inputs */
+:root:not([data-theme="light"]) input:focus,
+:root:not([data-theme="light"]) select:focus,
+:root:not([data-theme="light"]) textarea:focus{
+  border-color:#B14DDE;
+  box-shadow:0 0 0 2px rgba(177,77,222,.15);
+}
+
+/* Purple borders for secondary controls */
+:root:not([data-theme="light"]) .iconbtn{
+  border-color:#44304F;
+}
+
+/* Purple accent for progress, charts and highlighted text */
+:root:not([data-theme="light"]) .accent{
+  color:#D1A3FF;
+}
+
+/* Purple chart line and ring accents use the existing accent variable */
+:root:not([data-theme="light"]) .chartbox{
+  border-radius:12px;
+}
+
+/* Keep light mode looking as it did before */
+:root[data-theme="light"] body{
+  background:var(--bg);
+}
 </style>
 </head>
 <body>
